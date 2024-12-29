@@ -9,8 +9,8 @@ app = Flask(__name__)  # Fixed: Changed _name to _name_
 CORS(app)
 
 # Supabase configuration
-supabase_url = 'https://uoaqpcsbemezoyfvrpbf.supabase.co'
-supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvYXFwY3NiZW1lem95ZnZycGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5MzE4OTAsImV4cCI6MjA0MjUwNzg5MH0.nD_iWXbvqxQ5xKI23265K6jwXvApLeTGEmVsNCo3zb0'
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_KEY')
 supabase = create_client(supabase_url, supabase_key)
 
 # Load the pre-trained Isolation Forest model
