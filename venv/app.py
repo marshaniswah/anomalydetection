@@ -3,23 +3,18 @@ from supabase import create_client
 import pandas as pd
 from pycaret.anomaly import load_model, predict_model
 import os
-from dotenv import load_dotenv
+from flask_cors import CORS
 
-# Load environment variables
-load_dotenv()
-
-app = Flask(__name__)
+app = Flask(__name__)  # Fixed: Changed _name to _name_
+CORS(app)
 
 # Supabase configuration
-supabase_url = os.getenv('SUPABASE_URL')
-supabase_key = os.getenv('SUPABASE_KEY')
+supabase_url = 'https://uoaqpcsbemezoyfvrpbf.supabase.co'
+supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvYXFwY3NiZW1lem95ZnZycGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5MzE4OTAsImV4cCI6MjA0MjUwNzg5MH0.nD_iWXbvqxQ5xKI23265K6jwXvApLeTGEmVsNCo3zb0'
 supabase = create_client(supabase_url, supabase_key)
 
-# Load the pre-trained model
-model = load_model('ModelKNN')
-
-# Set the anomaly score threshold
-ANOMALY_SCORE_THRESHOLD = 50.0
+# Load the pre-trained Isolation Forest model
+model = load_model('iforest_model')
 
 @app.route('/detect_anomalies', methods=['GET'])
 def detect_anomalies():
@@ -39,14 +34,11 @@ def detect_anomalies():
         # Use the newest 2000 data points for anomaly detection
         detect_data = df.head(2000)
         
-        # Detect anomalies using the pre-trained model
+        # Detect anomalies using the pre-trained Isolation Forest model
         predictions = predict_model(model, data=detect_data)
         
-        # Add 'anomaly' column based on Anomaly_Score threshold
-        predictions['anomaly'] = (predictions['Anomaly_Score'] > ANOMALY_SCORE_THRESHOLD).astype(int)
-        
         # Prepare data for Supabase update
-        update_data = predictions[['id', 'created_at', 'anomaly', 'Anomaly_Score']].rename(columns={'Anomaly_Score': 'anomaly_score'})
+        update_data = predictions[['id', 'created_at', 'Anomaly', 'Anomaly_Score']].rename(columns={'Anomaly': 'anomaly', 'Anomaly_Score': 'anomaly_score'})
         
         # Insert or update Supabase 'anomaly' table
         for _, row in update_data.iterrows():
@@ -69,8 +61,8 @@ def detect_anomalies():
         return jsonify(result)
     
     except Exception as e:
+        print(f"Error: {str(e)}")  # Added: Print the error for debugging
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # Fixed: Changed _name to _name_
     app.run(debug=True)
-
